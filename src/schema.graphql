@@ -1,0 +1,66 @@
+directive @complexity(value: Int!, multipliers: [String!]) on FIELD_DEFINITION
+
+type Query {
+  info: String!
+  feed(
+    filter: String
+    skip: Int! = 0
+    take: Int! = 10
+    orderBy: LinkOrderByInput
+  ): Feed! @complexity(value: 1, multipliers: ["take"])
+  link(id: ID!): Link
+}
+
+type Feed {
+  links: [Link!]!
+  count: Int!
+}
+
+type Mutation {
+  post(url: String!, description: String!): Link!
+  signup(email: String!, password: String!, name: String!): AuthPayload
+  login(email: String!, password: String!): AuthPayload
+  vote(linkId: ID!): Vote
+}
+
+type Subscription {
+  newLink: Link
+  newVote: Vote
+}
+
+type Link {
+  id: ID!
+  description: String!
+  url: String!
+  postedBy: User @complexity(value: 10)
+  votes: [Vote!]! @complexity(value: 10)
+}
+
+type AuthPayload {
+  token: String
+  user: User
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  links: [Link!]! @complexity(value: 10)
+}
+
+type Vote {
+  id: ID!
+  link: Link! @complexity(value: 2)
+  user: User! @complexity(value: 10)
+}
+
+input LinkOrderByInput {
+  description: Sort
+  url: Sort
+  createdAt: Sort
+}
+
+enum Sort {
+  asc
+  desc
+}
